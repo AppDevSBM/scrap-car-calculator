@@ -2078,7 +2078,14 @@ function pruneQuoteLogItems(items){
           }
         }catch(e){}
 
-        return lsItems;
+        // Prune test data before 12/03/2026
+        var _cutoff = '2026-03-12T00:00:00';
+        var _pruned = [];
+        for (var _pi=0;_pi<lsItems.length;_pi++){
+          if (lsItems[_pi].atIso && lsItems[_pi].atIso < _cutoff) continue;
+          _pruned.push(lsItems[_pi]);
+        }
+        return _pruned;
       }
 
       function saveQuoteLog(items){
@@ -2192,11 +2199,12 @@ function pruneQuoteLogItems(items){
           var _isMax = outcome.indexOf('MAX') > -1;
           var _isColl = outcome.indexOf('Coll') > -1;
           var _isDel = outcome.indexOf('Del') > -1;
-          var _noCD = (!_isColl && !_isDel);
-          var scHl = ((_isColl && _isStd) || (_noCD && _isStd)) && hlBg ? 'background:'+hlBg+';font-weight:900;' : '';
-          var sdHl = (_isDel && _isStd && hlBg) ? 'background:'+hlBg+';font-weight:900;' : '';
-          var mcHl = ((_isColl && _isMax) || (_noCD && _isMax)) && hlBg ? 'background:'+hlBg+';font-weight:900;' : '';
-          var mdHl = (_isDel && _isMax && hlBg) ? 'background:'+hlBg+';font-weight:900;' : '';
+          var _noTag = (!_isStd && !_isMax);
+          var _hlAll = _noTag && hlBg ? 'background:'+hlBg+';font-weight:900;' : '';
+          var scHl = _hlAll || ((_isStd && (_isColl || (!_isColl && !_isDel))) && hlBg ? 'background:'+hlBg+';font-weight:900;' : '');
+          var sdHl = _hlAll || ((_isStd && _isDel && hlBg) ? 'background:'+hlBg+';font-weight:900;' : '');
+          var mcHl = _hlAll || ((_isMax && (_isColl || (!_isColl && !_isDel))) && hlBg ? 'background:'+hlBg+';font-weight:900;' : '');
+          var mdHl = _hlAll || ((_isMax && _isDel && hlBg) ? 'background:'+hlBg+';font-weight:900;' : '');
           tr.innerHTML =
             '<td style="text-align:left;">' + dt + '</td>' +
             '<td style="text-align:left;">' + user + '</td>' +
@@ -4866,11 +4874,21 @@ function recalc(){
         </div>
       </div>
 
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;align-items:stretch;">
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:14px;align-items:stretch;">
         <div class="card" style="padding:16px;border-top:3px solid rgba(245,158,11,.5);display:flex;flex-direction:column;">
-          <div style="font-weight:900;font-size:16px;margin-bottom:12px;letter-spacing:.8px;opacity:.85;text-transform:uppercase;color:#f59e0b;">OUTCOME BREAKDOWN</div>
-          <div id="qlChartOutcome" style="min-height:130px;"></div>
+          <div style="font-weight:900;font-size:16px;margin-bottom:12px;letter-spacing:.8px;opacity:.85;text-transform:uppercase;color:#f59e0b;">OVERALL OUTCOME</div>
+          <div id="qlChartOutcome" style="min-height:130px;flex:1;"></div>
         </div>
+        <div class="card" style="padding:16px;border-top:3px solid rgba(99,179,237,.5);display:flex;flex-direction:column;">
+          <div style="font-weight:900;font-size:16px;margin-bottom:12px;letter-spacing:.8px;opacity:.85;text-transform:uppercase;color:#63b3ed;">STD OFFER BREAKDOWN</div>
+          <div id="qlChartOutcomeStd" style="min-height:130px;flex:1;"></div>
+        </div>
+        <div class="card" style="padding:16px;border-top:3px solid rgba(139,92,246,.5);display:flex;flex-direction:column;">
+          <div style="font-weight:900;font-size:16px;margin-bottom:12px;letter-spacing:.8px;opacity:.85;text-transform:uppercase;color:#a78bfa;">MAX OFFER BREAKDOWN</div>
+          <div id="qlChartOutcomeMax" style="min-height:130px;flex:1;"></div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr;gap:12px;margin-bottom:14px;">
         <div class="card" style="padding:16px;border-top:3px solid rgba(99,179,237,.5);">
           <div style="font-weight:900;font-size:16px;margin-bottom:12px;letter-spacing:.8px;opacity:.85;text-transform:uppercase;color:#63b3ed;">TOTAL QUOTES BY USER</div>
           <div id="qlChartByUser" style="max-height:none;"></div>
@@ -5034,8 +5052,31 @@ function __HC_TOAST__(msg, ok){
     if($("pageQuoteLog"))      $("pageQuoteLog").style.display      = "";
     if (typeof __wireQLSearch === "function") __wireQLSearch();
     if (typeof __wireQLExport === "function") __wireQLExport();
-    renderKPIDashboard();
-    if (typeof window.renderQuoteLog === "function") window.renderQuoteLog();
+    // Always fetch fresh data from Firebase before rendering
+    if(window.__fbReady && window.__fbQuotesRef){
+      window.__fbQuotesRef.once('value').then(function(s){
+        try{
+          var d=s.val();
+          if(d&&d.version===1&&Array.isArray(d.items)){
+            var _lsR2=localStorage.getItem('scrapCalcQuoteLog_v10');var _lsI2=[];
+            try{var _lp2=JSON.parse(_lsR2);if(_lp2&&_lp2.version===1&&Array.isArray(_lp2.items))_lsI2=_lp2.items;}catch(_){}
+            var merged2=d.items.slice();
+            for(var i2=0;i2<_lsI2.length;i2++){var dup2=false;for(var j2=0;j2<merged2.length;j2++){if(merged2[j2].atIso===_lsI2[i2].atIso&&merged2[j2].vrm===_lsI2[i2].vrm){dup2=true;break;}}if(!dup2)merged2.push(_lsI2[i2]);}
+            merged2.sort(function(a,b){return(b.atIso||'').localeCompare(a.atIso||'');});
+            window.__fbCache=merged2;
+            try{localStorage.setItem('scrapCalcQuoteLog_v10',JSON.stringify({version:1,savedAt:new Date().toISOString(),items:merged2}));}catch(_){}
+          }
+        }catch(_){}
+        renderKPIDashboard();
+        if(typeof window.renderQuoteLog==="function") window.renderQuoteLog();
+      }).catch(function(){
+        renderKPIDashboard();
+        if(typeof window.renderQuoteLog==="function") window.renderQuoteLog();
+      });
+    } else {
+      renderKPIDashboard();
+      if (typeof window.renderQuoteLog === "function") window.renderQuoteLog();
+    }
   }
 
   function renderKPIDashboard(){
@@ -5069,6 +5110,7 @@ function __HC_TOAST__(msg, ok){
     var total = _items.length;
     var monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
     var won=0, lost=0, nd=0, accepted=0, declined=0, todayCount=0, weekCount=0, monthCount=0;
+    var stdAcc=0, stdDec=0, stdNd=0, stdTotal=0, maxAcc=0, maxDec=0, maxNd=0, maxTotal=0;
     var userMap={}, vrmMap={}, postcodeMap={}, dailyMap={}, userDetailMap={};
 
     for (var i=0; i<_items.length; i++){
@@ -5080,6 +5122,10 @@ function __HC_TOAST__(msg, ok){
       else if (lOut.indexOf("accept") > -1) accepted++;
       else if (lOut.indexOf("declin") > -1) declined++;
       else                                  nd++;
+      var _hasStd = outcome.indexOf('STD') > -1;
+      var _hasMax = outcome.indexOf('MAX') > -1;
+      if (_hasStd){ stdTotal++; if(lOut.indexOf('accept')>-1||lOut.indexOf('won')>-1) stdAcc++; else if(lOut.indexOf('declin')>-1||lOut.indexOf('lost')>-1) stdDec++; else stdNd++; }
+      if (_hasMax){ maxTotal++; if(lOut.indexOf('accept')>-1||lOut.indexOf('won')>-1) maxAcc++; else if(lOut.indexOf('declin')>-1||lOut.indexOf('lost')>-1) maxDec++; else maxNd++; }
 
       var dt = null;
       if (it.atIso){ try{ dt = new Date(it.atIso); }catch(_){} }
@@ -5132,7 +5178,7 @@ function __HC_TOAST__(msg, ok){
     }
 
     // Quotes by Zone (this month)
-    var zoneEl=$("qlTableZones");if(zoneEl){var zoneData={"Zone 1":{accepted:0,declined:0,nd:0,total:0},"Zone 2":{accepted:0,declined:0,nd:0,total:0},"Zone 3":{accepted:0,declined:0,nd:0,total:0},"Zone 4":{accepted:0,declined:0,nd:0,total:0},"Zone 5":{accepted:0,declined:0,nd:0,total:0},"Zone 6":{accepted:0,declined:0,nd:0,total:0}},_defR=[{area:"CT",from:6,to:14,zone:1},{area:"CT",from:1,to:3,zone:2},{area:"CT",from:5,to:5,zone:2},{area:"CT",from:15,to:17,zone:2},{area:"ME",from:13,to:13,zone:2},{area:"CT",from:4,to:4,zone:3},{area:"CT",from:18,to:21,zone:3},{area:"ME",from:1,to:2,zone:4},{area:"ME",from:4,to:12,zone:4},{area:"ME",from:14,to:20,zone:4},{area:"TN",from:12,to:12,zone:4},{area:"TN",from:19,to:22,zone:4},{area:"TN",from:24,to:29,zone:4},{area:"TN",from:1,to:4,zone:5},{area:"TN",from:9,to:11,zone:5},{area:"TN",from:17,to:18,zone:5},{area:"TN",from:30,to:30,zone:5},{area:"TN",from:5,to:8,zone:6},{area:"TN",from:13,to:16,zone:6},{area:"DA",from:11,to:13,zone:6}];var _zCfg=null;try{var _zR=localStorage.getItem("elv_postcode_cfg_v1");if(_zR){var _zP=JSON.parse(_zR);if(_zP&&Array.isArray(_zP.ranges))_zCfg=_zP;}}catch(_){}if(!_zCfg)_zCfg={ranges:_defR};for(var zi=0;zi<_items.length;zi++){var zIt=_items[zi]||{};var zTs=Date.parse(zIt.atIso||"");if(!isFinite(zTs))continue;if(new Date(zTs)<monthStart)continue;var zPc=String(zIt.postcode||"").toUpperCase().replace(/\s/g,"");var zZone="Unknown";if(zPc){try{var zm=zPc.match(/^([A-Z]{1,2})(\d+)/);if(zm){var zA=zm[1],zN=parseInt(zm[2],10),zF=false;for(var zr=0;zr<_zCfg.ranges.length;zr++){var zR=_zCfg.ranges[zr];if(zR.area===zA&&zN>=zR.from&&zN<=zR.to){zZone="Zone "+zR.zone;zF=true;break;}}if(!zF)zZone="OOA";}}catch(_){}}var zOut=String(zIt.outcome||"").toLowerCase();if(zZone==="OOA"||zZone==="Unknown")continue;if(!zoneData[zZone])zoneData[zZone]={accepted:0,declined:0,nd:0,total:0};zoneData[zZone].total++;if(zOut.indexOf("won")>-1||zOut.indexOf("accept")>-1)zoneData[zZone].accepted++;else if(zOut.indexOf("lost")>-1||zOut.indexOf("declin")>-1)zoneData[zZone].declined++;else zoneData[zZone].nd++;}var zArr=[];for(var zk in zoneData)zArr.push({zone:zk,d:zoneData[zk]});zArr.sort(function(a,b){return a.zone<b.zone?-1:a.zone>b.zone?1:0;});var zH="<table style=\"width:100%;border-collapse:collapse;font-size:12px;\"><thead><tr>";var zTh="padding:6px 10px;border-bottom:1px solid rgba(255,255,255,.12);font-size:10px;letter-spacing:.6px;opacity:.55;text-transform:uppercase;";zH+="<th style=\"text-align:left;"+zTh+"\">Zone</th><th style=\"text-align:right;"+zTh+"\">Accepted</th><th style=\"text-align:right;"+zTh+"\">Declined</th><th style=\"text-align:right;"+zTh+"\">No Decision</th><th style=\"text-align:right;"+zTh+"\">Total</th><th style=\"text-align:right;"+zTh+"\">Win %</th></tr></thead><tbody>";for(var zii=0;zii<zArr.length;zii++){var zRow=zArr[zii];var zBg=(zii%2===0)?"rgba(255,255,255,.03)":"transparent";var zWP=zRow.d.total>0?Math.round((zRow.d.accepted/zRow.d.total)*100):0;zH+="<tr style=\"background:"+zBg+"\"><td style=\"padding:6px 10px;font-weight:700;\">"+zRow.zone+"</td><td style=\"text-align:right;padding:6px 10px;font-weight:700;color:#10b981;\">"+zRow.d.accepted+"</td><td style=\"text-align:right;padding:6px 10px;font-weight:700;color:#ef4444;\">"+zRow.d.declined+"</td><td style=\"text-align:right;padding:6px 10px;font-weight:700;color:#f59e0b;\">"+zRow.d.nd+"</td><td style=\"text-align:right;padding:6px 10px;font-weight:900;\">"+zRow.d.total+"</td><td style=\"text-align:right;padding:6px 10px;font-weight:700;\">"+zWP+"%</td></tr>";}if(zArr.length===0)zH+="<tr><td colspan=\"6\" style=\"padding:12px 10px;opacity:.45;text-align:center;font-style:italic;\">No zone data this month</td></tr>";zH+="</tbody></table>";zoneEl.innerHTML=zH;}
+    var zoneEl=$("qlTableZones");if(zoneEl){var zoneData={"Zone 1":{accepted:0,declined:0,nd:0,total:0},"Zone 2":{accepted:0,declined:0,nd:0,total:0},"Zone 3":{accepted:0,declined:0,nd:0,total:0},"Zone 4":{accepted:0,declined:0,nd:0,total:0},"Zone 5":{accepted:0,declined:0,nd:0,total:0},"Zone 6":{accepted:0,declined:0,nd:0,total:0}},_zCfg=loadPostcodeCfg();for(var zi=0;zi<_items.length;zi++){var zIt=_items[zi]||{};var zTs=Date.parse(zIt.atIso||"");if(!isFinite(zTs))continue;if(new Date(zTs)<monthStart)continue;var zPc=String(zIt.postcode||"").toUpperCase().replace(/\s/g,"");var zZone="Unknown";if(zPc){try{var zm=zPc.match(/^([A-Z]{1,2})(\d+)/);if(zm){var zA=zm[1],zN=parseInt(zm[2],10),zF=false;for(var zr=0;zr<_zCfg.ranges.length;zr++){var zR=_zCfg.ranges[zr];if(zR.area===zA&&zN>=zR.from&&zN<=zR.to){zZone="Zone "+zR.zone;zF=true;break;}}if(!zF)zZone="OOA";}}catch(_){}}var zOut=String(zIt.outcome||"").toLowerCase();if(zZone==="OOA"||zZone==="Unknown")continue;if(!zoneData[zZone])zoneData[zZone]={accepted:0,declined:0,nd:0,total:0};zoneData[zZone].total++;if(zOut.indexOf("won")>-1||zOut.indexOf("accept")>-1)zoneData[zZone].accepted++;else if(zOut.indexOf("lost")>-1||zOut.indexOf("declin")>-1)zoneData[zZone].declined++;else zoneData[zZone].nd++;}var zArr=[];for(var zk in zoneData)zArr.push({zone:zk,d:zoneData[zk]});zArr.sort(function(a,b){return a.zone<b.zone?-1:a.zone>b.zone?1:0;});var zH="<table style=\"width:100%;border-collapse:collapse;font-size:12px;\"><thead><tr>";var zTh="padding:6px 10px;border-bottom:1px solid rgba(255,255,255,.12);font-size:10px;letter-spacing:.6px;opacity:.55;text-transform:uppercase;";zH+="<th style=\"text-align:left;"+zTh+"\">Zone</th><th style=\"text-align:right;"+zTh+"\">Accepted</th><th style=\"text-align:right;"+zTh+"\">Declined</th><th style=\"text-align:right;"+zTh+"\">No Decision</th><th style=\"text-align:right;"+zTh+"\">Total</th><th style=\"text-align:right;"+zTh+"\">Win %</th></tr></thead><tbody>";for(var zii=0;zii<zArr.length;zii++){var zRow=zArr[zii];var zBg=(zii%2===0)?"rgba(255,255,255,.03)":"transparent";var zWP=zRow.d.total>0?Math.round((zRow.d.accepted/zRow.d.total)*100):0;zH+="<tr style=\"background:"+zBg+"\"><td style=\"padding:6px 10px;font-weight:700;\">"+zRow.zone+"</td><td style=\"text-align:right;padding:6px 10px;font-weight:700;color:#10b981;\">"+zRow.d.accepted+"</td><td style=\"text-align:right;padding:6px 10px;font-weight:700;color:#ef4444;\">"+zRow.d.declined+"</td><td style=\"text-align:right;padding:6px 10px;font-weight:700;color:#f59e0b;\">"+zRow.d.nd+"</td><td style=\"text-align:right;padding:6px 10px;font-weight:900;\">"+zRow.d.total+"</td><td style=\"text-align:right;padding:6px 10px;font-weight:700;\">"+zWP+"%</td></tr>";}if(zArr.length===0)zH+="<tr><td colspan=\"6\" style=\"padding:12px 10px;opacity:.45;text-align:center;font-style:italic;\">No zone data this month</td></tr>";zH+="</tbody></table>";zoneEl.innerHTML=zH;}
     // Outcome breakdown chart
     var outEl = $("qlChartOutcome");
     if (outEl){
@@ -5146,7 +5192,7 @@ function __HC_TOAST__(msg, ok){
         var oc = ocs[oi];
         var pct = Math.round((oc.cnt/totO)*100);
         var bww = Math.max(0, Math.round((oc.cnt/totO)*58));
-        var lbl = oc.label.length > 10 ? oc.label.slice(0,10) : oc.label;
+        var lbl = oc.label;
         rows += "<text x=\"0\" y=\""+(oy+16)+"\" font-size=\"14\" font-weight=\"700\" fill=\"rgba(255,255,255,.85)\">"+lbl+"</text>";
         rows += "<rect x=\"34%\" y=\""+oy+"\" width=\""+bww+"%\" height=\"20\" rx=\"5\" fill=\""+oc.color+"\"/>";
         rows += "<text x=\""+(35+bww)+"%\" y=\""+(oy+15)+"\" font-size=\"14\" font-weight=\"900\" fill=\"rgba(255,255,255,.8)\">"+oc.cnt+" ("+pct+"%)</text>";
@@ -5154,6 +5200,28 @@ function __HC_TOAST__(msg, ok){
       }
       outEl.innerHTML = "<svg width=\"100%\" height=\"100%\" style=\"display:block;min-height:130px;\">"+rows+"</svg>";
     }
+
+    // STD Offer Breakdown
+    function _renderBreakdownChart(elId, accCnt, decCnt, ndCnt, totalCnt, barColor){
+      var el = $(elId); if(!el) return;
+      var t = totalCnt || 1;
+      var data = [
+        {label:"Accepted",    cnt:accCnt, color:"#10b981"},
+        {label:"Declined",    cnt:decCnt, color:"#ef4444"},
+        {label:"No Decision", cnt:ndCnt,  color:"#f59e0b"}
+      ];
+      var svg="", yy=10;
+      for(var di=0;di<data.length;di++){
+        var d=data[di], dp=Math.round((d.cnt/t)*100), dw=Math.max(0,Math.round((d.cnt/t)*50));
+        svg+="<text x=\"0\" y=\""+(yy+16)+"\" font-size=\"14\" font-weight=\"700\" fill=\"rgba(255,255,255,.85)\">"+d.label+"</text>";
+        svg+="<rect x=\"38%\" y=\""+yy+"\" width=\""+dw+"%\" height=\"20\" rx=\"5\" fill=\""+d.color+"\"/>";
+        svg+="<text x=\""+(39+dw)+"%\" y=\""+(yy+15)+"\" font-size=\"14\" font-weight=\"900\" fill=\"rgba(255,255,255,.8)\">"+d.cnt+" ("+dp+"%)</text>";
+        yy+=36;
+      }
+      el.innerHTML="<svg width=\"100%\" height=\"100%\" style=\"display:block;min-height:130px;\">"+svg+"</svg>";
+    }
+    _renderBreakdownChart("qlChartOutcomeStd", stdAcc, stdDec, stdNd, stdTotal);
+    _renderBreakdownChart("qlChartOutcomeMax", maxAcc, maxDec, maxNd, maxTotal);
 
     // Quotes by User table
     var userEl = $("qlTableUsers");
