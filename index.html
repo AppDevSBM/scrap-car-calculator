@@ -2237,7 +2237,7 @@ function pruneQuoteLogItems(items){
             '<td style="'+mcHl+'">' + fmtGBP(mc) + '</td>' +
             '<td style="'+mdHl+'">' + fmtGBP(md) + '</td>' +
             '<td style="text-align:right;font-weight:700;color:#f59e0b;">' + (Number(it.overridePrice)>0 ? fmtGBP(Number(it.overridePrice)) : '') + '</td>' +
-            '<td style="text-align:left; font-weight:900; color:' + col + ';">' + outcome + '</td>';
+            '<td style="text-align:left; font-weight:900; color:' + col + ';">' + outcome.replace(/\xc2\xa3/g,'\u00a3').replace(/\u00c2\u00a3/g,'\u00a3').replace(/Override\s*[\u00a3\xc2\xa3]?\d+\s*/g,'Override ') + '</td>';
           tbody.appendChild(tr);
         }
 
@@ -2415,7 +2415,7 @@ function pruneQuoteLogItems(items){
             var it = items[i] || {};
             rows.push([
               esc(it.atIso || ''), esc(it.at), esc(it.user), esc(it.vrm), esc(it.kg), esc(it.fuel), esc(it.size),
-              esc(it.stdCollected), esc(it.stdDelivered), esc(it.maxCollected), esc(it.maxDelivered), esc(it.overridePrice||0), esc(it.outcome)
+              esc(it.stdCollected), esc(it.stdDelivered), esc(it.maxCollected), esc(it.maxDelivered), esc(it.overridePrice||0), esc(String(it.outcome||'').replace(/\xc2\xa3/g,'\u00a3').replace(/\u00c2\u00a3/g,'\u00a3'))
             ].join(','));
           }
 
@@ -4897,30 +4897,66 @@ function recalc(){
 
 
     <div style="padding:16px 18px 4px;">
-      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:14px;">
-        <div class="card" style="padding:14px 16px;text-align:center;border-top:3px solid rgba(99,179,237,.6);">
-          <div style="font-size:10px;font-weight:700;letter-spacing:.8px;opacity:.6;text-transform:uppercase;margin-bottom:6px;">Total Quotes</div>
-          <div id="qlKpiTotal" style="font-size:30px;font-weight:950;letter-spacing:.5px;">—</div>
+      <!-- ROW 1: Total Quotes Win Rate / This Month Win Rate / Today Win Rate -->
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:14px;">
+        <div class="card" style="padding:16px;border-top:3px solid rgba(99,179,237,.6);">
+          <div style="font-size:10px;font-weight:700;letter-spacing:.8px;opacity:.6;text-transform:uppercase;margin-bottom:8px;">TOTAL QUOTES</div>
+          <div style="display:flex;align-items:baseline;gap:14px;">
+            <div id="qlKpiTotal" style="font-size:36px;font-weight:950;letter-spacing:.5px;">—</div>
+            <div style="display:flex;align-items:baseline;gap:6px;">
+              <div style="font-size:11px;font-weight:700;opacity:.5;">WIN RATE</div>
+              <div id="qlKpiWinRate" style="font-size:28px;font-weight:950;color:#10b981;">—</div>
+            </div>
+          </div>
         </div>
-        <div class="card" style="padding:14px 16px;text-align:center;border-top:3px solid rgba(16,185,129,.6);">
-          <div style="font-size:10px;font-weight:700;letter-spacing:.8px;opacity:.6;text-transform:uppercase;margin-bottom:6px;">Win Rate</div>
-          <div id="qlKpiWinRate" style="font-size:30px;font-weight:950;letter-spacing:.5px;color:#10b981;">—</div>
+        <div class="card" style="padding:16px;border-top:3px solid rgba(139,92,246,.6);">
+          <div style="font-size:10px;font-weight:700;letter-spacing:.8px;opacity:.6;text-transform:uppercase;margin-bottom:8px;">THIS MONTH</div>
+          <div style="display:flex;align-items:baseline;gap:14px;">
+            <div id="qlKpiMonth" style="font-size:36px;font-weight:950;letter-spacing:.5px;">—</div>
+            <div style="display:flex;align-items:baseline;gap:6px;">
+              <div style="font-size:11px;font-weight:700;opacity:.5;">WIN RATE</div>
+              <div id="qlKpiMonthWR" style="font-size:28px;font-weight:950;color:#10b981;">—</div>
+            </div>
+          </div>
         </div>
-        <div class="card" style="padding:14px 16px;text-align:center;border-top:3px solid rgba(245,158,11,.6);">
-          <div style="font-size:10px;font-weight:700;letter-spacing:.8px;opacity:.6;text-transform:uppercase;margin-bottom:6px;">Today</div>
-          <div id="qlKpiToday" style="font-size:30px;font-weight:950;letter-spacing:.5px;">—</div>
-        </div>
-        <div class="card" style="padding:14px 16px;text-align:center;border-top:3px solid rgba(139,92,246,.6);">
-          <div style="font-size:10px;font-weight:700;letter-spacing:.8px;opacity:.6;text-transform:uppercase;margin-bottom:6px;">This Week</div>
-          <div id="qlKpiWeek" style="font-size:30px;font-weight:950;letter-spacing:.5px;">—</div>
-        </div>
-        <div class="card" style="padding:14px 16px;text-align:center;border-top:3px solid rgba(236,72,153,.6);">
-          <div style="font-size:10px;font-weight:700;letter-spacing:.8px;opacity:.6;text-transform:uppercase;margin-bottom:6px;">This Month</div>
-          <div id="qlKpiMonth" style="font-size:26px;font-weight:950;letter-spacing:.5px;">—</div>
+        <div class="card" style="padding:16px;border-top:3px solid rgba(245,158,11,.6);">
+          <div style="font-size:10px;font-weight:700;letter-spacing:.8px;opacity:.6;text-transform:uppercase;margin-bottom:8px;">TODAY</div>
+          <div style="display:flex;align-items:baseline;gap:14px;">
+            <div id="qlKpiToday" style="font-size:36px;font-weight:950;letter-spacing:.5px;">—</div>
+            <div style="display:flex;align-items:baseline;gap:6px;">
+              <div style="font-size:11px;font-weight:700;opacity:.5;">WIN RATE</div>
+              <div id="qlKpiTodayWR" style="font-size:28px;font-weight:950;color:#10b981;">—</div>
+            </div>
+          </div>
         </div>
       </div>
 
-            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:14px;align-items:stretch;">
+      <!-- ROW 2: Quotes Per Day / Quotes Per Month -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">
+        <div class="card" style="padding:16px;border-top:3px solid rgba(99,179,237,.5);">
+          <div style="font-weight:900;font-size:16px;margin-bottom:12px;letter-spacing:.8px;opacity:.85;text-transform:uppercase;color:#63b3ed;">QUOTES PER DAY &mdash; LAST 7 DAYS</div>
+          <div id="qlChartDaily7" style="height:130px;"></div>
+        </div>
+        <div class="card" style="padding:16px;border-top:3px solid rgba(139,92,246,.5);">
+          <div style="font-weight:900;font-size:16px;margin-bottom:12px;letter-spacing:.8px;opacity:.85;text-transform:uppercase;color:#a78bfa;">QUOTES PER MONTH</div>
+          <div id="qlChartMonthly" style="height:130px;"></div>
+        </div>
+      </div>
+
+      <!-- ROW 3: Quotes by Zone This Month & Total -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">
+        <div class="card" style="padding:16px;border-top:3px solid rgba(52,211,153,.5);">
+          <div style="font-weight:900;font-size:16px;margin-bottom:12px;letter-spacing:.8px;opacity:.85;text-transform:uppercase;color:#34d399;">QUOTES BY ZONE &mdash; THIS MONTH</div>
+          <div id="qlTableZones" style="min-height:120px;"></div>
+        </div>
+        <div class="card" style="padding:16px;border-top:3px solid rgba(52,211,153,.5);">
+          <div style="font-weight:900;font-size:16px;margin-bottom:12px;letter-spacing:.8px;opacity:.85;text-transform:uppercase;color:#34d399;">TOTAL QUOTES BY ZONE</div>
+          <div id="qlTableZonesTotal" style="min-height:120px;"></div>
+        </div>
+      </div>
+
+      <!-- ROW 4: Overall Outcome / STD Breakdown / MAX Breakdown -->
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:14px;align-items:stretch;">
         <div class="card" style="padding:16px;border-top:3px solid rgba(245,158,11,.5);display:flex;flex-direction:column;">
           <div style="font-weight:900;font-size:16px;margin-bottom:12px;letter-spacing:.8px;opacity:.85;text-transform:uppercase;color:#f59e0b;">OVERALL OUTCOME</div>
           <div id="qlChartOutcome" style="min-height:130px;flex:1;"></div>
@@ -4935,10 +4971,7 @@ function recalc(){
         </div>
       </div>
 
-
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;"><div class="card" style="padding:16px;border-top:3px solid rgba(99,179,237,.5);"><div style="font-weight:900;font-size:16px;margin-bottom:12px;letter-spacing:.8px;opacity:.85;text-transform:uppercase;color:#63b3ed;">QUOTES PER DAY &mdash; LAST 7 DAYS</div><div id="qlChartDaily7" style="height:130px;"></div></div><div class="card" style="padding:16px;border-top:3px solid rgba(139,92,246,.5);"><div style="font-weight:900;font-size:16px;margin-bottom:12px;letter-spacing:.8px;opacity:.85;text-transform:uppercase;color:#a78bfa;">QUOTES PER MONTH</div><div id="qlChartMonthly" style="height:130px;"></div></div></div>
-      <div class="card" style="padding:16px;border-top:3px solid rgba(52,211,153,.5);margin-bottom:14px;"><div style="font-weight:900;font-size:16px;margin-bottom:12px;letter-spacing:.8px;opacity:.85;text-transform:uppercase;color:#34d399;">QUOTES BY ZONE &mdash; THIS MONTH</div><div id="qlTableZones"></div></div>
-
+      <!-- ROW 5: Users / Top Regs / Top Postcodes -->
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:14px;">
         <div class="card" style="padding:16px;border-top:3px solid rgba(99,179,237,.5);">
           <div style="font-weight:900;font-size:16px;margin-bottom:12px;letter-spacing:.8px;opacity:.85;text-transform:uppercase;color:#63b3ed;">QUOTES BY USER</div>
@@ -5197,12 +5230,28 @@ function __HC_TOAST__(msg, ok){
 
     var winRate = total > 0 ? Math.round((accepted / total) * 100) : 0;
 
+    // Compute monthly and today win rates
+    var monthAcc=0, monthTotal2=0, todayAcc=0, todayTotal2=0;
+    for (var wi=0; wi<_items.length; wi++){
+      var wIt=_items[wi]||{};var wDt=null;
+      if(wIt.atIso){try{wDt=new Date(wIt.atIso);}catch(_){}}
+      if(!wDt||isNaN(wDt.getTime())){if(wIt.at){try{var wPts=String(wIt.at).match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);if(wPts)wDt=new Date(Number(wPts[3]),Number(wPts[2])-1,Number(wPts[1]));}catch(_){}}}
+      if(!wDt||isNaN(wDt.getTime()))continue;
+      var wOut=String(wIt.outcome||"").toLowerCase();
+      var wIsAcc=(wOut.indexOf("won")>-1||wOut.indexOf("accept")>-1);
+      if(wDt>=monthStart){monthTotal2++;if(wIsAcc)monthAcc++;}
+      if(wDt.toLocaleDateString("en-GB")===todayStr){todayTotal2++;if(wIsAcc)todayAcc++;}
+    }
+    var monthWR=monthTotal2>0?Math.round((monthAcc/monthTotal2)*100):0;
+    var todayWR=todayTotal2>0?Math.round((todayAcc/todayTotal2)*100):0;
+
     function _setEl(id, val){ var el=$("ql"+id); if(el) el.textContent=val; }
     _setEl("KpiTotal",   String(total));
     _setEl("KpiWinRate", String(winRate) + "%");
     _setEl("KpiToday",   String(todayCount));
-    _setEl("KpiWeek",    String(weekCount));
+    _setEl("KpiTodayWR", String(todayWR) + "%");
     _setEl("KpiMonth",   String(monthCount));
+    _setEl("KpiMonthWR", String(monthWR) + "%");
 
         // Charts and tables section
     try{
@@ -5213,7 +5262,51 @@ function __HC_TOAST__(msg, ok){
 
 
     // Quotes by Zone (this month)
-    var zoneEl=$("qlTableZones");if(zoneEl){var zoneData={"Zone 1":{accepted:0,declined:0,nd:0,total:0},"Zone 2":{accepted:0,declined:0,nd:0,total:0},"Zone 3":{accepted:0,declined:0,nd:0,total:0},"Zone 4":{accepted:0,declined:0,nd:0,total:0},"Zone 5":{accepted:0,declined:0,nd:0,total:0},"Zone 6":{accepted:0,declined:0,nd:0,total:0}},_zCfg=null;try{_zCfg=(typeof window.__loadPostcodeCfg==="function")?window.__loadPostcodeCfg():null;}catch(_){}if(!_zCfg){try{var _zR2=localStorage.getItem("elv_postcode_cfg_v1");if(_zR2){var _zP2=JSON.parse(_zR2);if(_zP2&&Array.isArray(_zP2.ranges))_zCfg=_zP2;}}catch(_){}}if(!_zCfg)_zCfg={ranges:[]};for(var zi=0;zi<_items.length;zi++){var zIt=_items[zi]||{};var zTs=Date.parse(zIt.atIso||"");if(!isFinite(zTs))continue;if(new Date(zTs)<monthStart)continue;var zPc=String(zIt.postcode||"").toUpperCase().replace(/\s/g,"");var zZone="Unknown";if(zPc){try{var _zRes=(typeof window.__zoneFromPostcode==="function")?window.__zoneFromPostcode(zPc,_zCfg):null;if(_zRes)zZone="Zone "+_zRes;else if(_zRes===null&&zPc.match(/^[A-Z]/))zZone="OOA";}catch(_){}}var zOut=String(zIt.outcome||"").toLowerCase();if(zZone==="OOA"||zZone==="Unknown")continue;if(!zoneData[zZone])zoneData[zZone]={accepted:0,declined:0,nd:0,total:0};zoneData[zZone].total++;if(zOut.indexOf("won")>-1||zOut.indexOf("accept")>-1)zoneData[zZone].accepted++;else if(zOut.indexOf("lost")>-1||zOut.indexOf("declin")>-1)zoneData[zZone].declined++;else zoneData[zZone].nd++;}var zArr=[];for(var zk in zoneData)zArr.push({zone:zk,d:zoneData[zk]});zArr.sort(function(a,b){return a.zone<b.zone?-1:a.zone>b.zone?1:0;});var zH="<table style=\"width:100%;border-collapse:collapse;font-size:12px;\"><thead><tr>";var zTh="padding:6px 10px;border-bottom:1px solid rgba(255,255,255,.12);font-size:10px;letter-spacing:.6px;opacity:.55;text-transform:uppercase;";zH+="<th style=\"text-align:left;"+zTh+"\">Zone</th><th style=\"text-align:right;"+zTh+"\">Accepted</th><th style=\"text-align:right;"+zTh+"\">Declined</th><th style=\"text-align:right;"+zTh+"\">No Decision</th><th style=\"text-align:right;"+zTh+"\">Total</th><th style=\"text-align:right;"+zTh+"\">Win %</th></tr></thead><tbody>";for(var zii=0;zii<zArr.length;zii++){var zRow=zArr[zii];var zBg=(zii%2===0)?"rgba(255,255,255,.03)":"transparent";var zWP=zRow.d.total>0?Math.round((zRow.d.accepted/zRow.d.total)*100):0;zH+="<tr style=\"background:"+zBg+"\"><td style=\"padding:6px 10px;font-weight:700;\">"+zRow.zone+"</td><td style=\"text-align:right;padding:6px 10px;font-weight:700;color:#10b981;\">"+zRow.d.accepted+"</td><td style=\"text-align:right;padding:6px 10px;font-weight:700;color:#ef4444;\">"+zRow.d.declined+"</td><td style=\"text-align:right;padding:6px 10px;font-weight:700;color:#f59e0b;\">"+zRow.d.nd+"</td><td style=\"text-align:right;padding:6px 10px;font-weight:900;\">"+zRow.d.total+"</td><td style=\"text-align:right;padding:6px 10px;font-weight:700;\">"+zWP+"%</td></tr>";}if(zArr.length===0)zH+="<tr><td colspan=\"6\" style=\"padding:12px 10px;opacity:.45;text-align:center;font-style:italic;\">No zone data this month</td></tr>";zH+="</tbody></table>";zoneEl.innerHTML=zH;}
+    var _zCfg=null;try{_zCfg=(typeof window.__loadPostcodeCfg==="function")?window.__loadPostcodeCfg():null;}catch(_){}if(!_zCfg){try{var _zR2=localStorage.getItem("elv_postcode_cfg_v1");if(_zR2){var _zP2=JSON.parse(_zR2);if(_zP2&&Array.isArray(_zP2.ranges))_zCfg=_zP2;}}catch(_){}}if(!_zCfg)_zCfg={ranges:[]};
+    var zoneMonthData={"Zone 1":{a:0,d:0,n:0,t:0},"Zone 2":{a:0,d:0,n:0,t:0},"Zone 3":{a:0,d:0,n:0,t:0},"Zone 4":{a:0,d:0,n:0,t:0},"Zone 5":{a:0,d:0,n:0,t:0},"Zone 6":{a:0,d:0,n:0,t:0}};
+    var zoneTotalData={"Zone 1":{a:0,d:0,n:0,t:0},"Zone 2":{a:0,d:0,n:0,t:0},"Zone 3":{a:0,d:0,n:0,t:0},"Zone 4":{a:0,d:0,n:0,t:0},"Zone 5":{a:0,d:0,n:0,t:0},"Zone 6":{a:0,d:0,n:0,t:0}};
+    for(var zi=0;zi<_items.length;zi++){var zIt=_items[zi]||{};var zTs=Date.parse(zIt.atIso||"");var zPc=String(zIt.postcode||"").toUpperCase().replace(/\s/g,"");var zZone="Unknown";if(zPc){try{var _zRes=(typeof window.__zoneFromPostcode==="function")?window.__zoneFromPostcode(zPc,_zCfg):null;if(_zRes)zZone="Zone "+_zRes;else if(_zRes===null&&zPc.match(/^[A-Z]/))zZone="OOA";}catch(_){}}var zOut=String(zIt.outcome||"").toLowerCase();if(zZone==="OOA"||zZone==="Unknown")continue;
+      var zIsAcc=(zOut.indexOf("won")>-1||zOut.indexOf("accept")>-1);var zIsDec=(zOut.indexOf("lost")>-1||zOut.indexOf("declin")>-1);
+      if(!zoneTotalData[zZone])zoneTotalData[zZone]={a:0,d:0,n:0,t:0};zoneTotalData[zZone].t++;if(zIsAcc)zoneTotalData[zZone].a++;else if(zIsDec)zoneTotalData[zZone].d++;else zoneTotalData[zZone].n++;
+      if(isFinite(zTs)&&new Date(zTs)>=monthStart){if(!zoneMonthData[zZone])zoneMonthData[zZone]={a:0,d:0,n:0,t:0};zoneMonthData[zZone].t++;if(zIsAcc)zoneMonthData[zZone].a++;else if(zIsDec)zoneMonthData[zZone].d++;else zoneMonthData[zZone].n++;}
+    }
+    function _renderZoneChart(elId, zData){
+      var el=$(elId);if(!el)return;
+      var zArr=[];var zMax=1;for(var zk in zData){zArr.push({zone:zk,d:zData[zk]});if(zData[zk].t>zMax)zMax=zData[zk].t;}
+      zArr.sort(function(a,b){return a.zone<b.zone?-1:a.zone>b.zone?1:0;});
+      var zColors=["#3b82f6","#8b5cf6","#10b981","#f59e0b","#ef4444","#ec4899"];
+      var h="";
+      for(var zi2=0;zi2<zArr.length;zi2++){
+        var zr=zArr[zi2];var wp=zr.d.t>0?Math.round((zr.d.a/zr.d.t)*100):0;
+        var barW=zr.d.t>0?Math.max(4,Math.round((zr.d.t/zMax)*100)):0;
+        var clr=zColors[zi2%zColors.length];
+        h+="<div style=\"display:flex;align-items:center;gap:10px;margin-bottom:6px;\">";
+        h+="<div style=\"width:50px;font-weight:900;font-size:12px;letter-spacing:.4px;color:"+clr+";flex-shrink:0;\">"+zr.zone.replace("Zone ","Z")+"</div>";
+        h+="<div style=\"flex:1;position:relative;height:26px;background:rgba(255,255,255,.04);border-radius:6px;overflow:hidden;\">";
+        if(zr.d.t>0){
+          var aW=Math.round((zr.d.a/zr.d.t)*barW);var dW=Math.round((zr.d.d/zr.d.t)*barW);var nW=barW-aW-dW;
+          if(aW>0)h+="<div style=\"position:absolute;left:0;top:0;bottom:0;width:"+aW+"%;background:#10b981;border-radius:6px 0 0 6px;\"></div>";
+          if(dW>0)h+="<div style=\"position:absolute;left:"+aW+"%;top:0;bottom:0;width:"+dW+"%;background:#ef4444;\"></div>";
+          if(nW>0)h+="<div style=\"position:absolute;left:"+(aW+dW)+"%;top:0;bottom:0;width:"+nW+"%;background:#f59e0b;border-radius:0 6px 6px 0;\"></div>";
+        }
+        h+="</div>";
+        h+="<div style=\"width:34px;text-align:right;font-weight:950;font-size:14px;\">"+zr.d.t+"</div>";
+        h+="<div style=\"width:42px;text-align:right;font-weight:700;font-size:12px;color:#10b981;\">"+wp+"%</div>";
+        h+="</div>";
+      }
+      if(zArr.length>0){
+        h+="<div style=\"display:flex;gap:14px;margin-top:8px;justify-content:center;\">";
+        h+="<div style=\"display:flex;align-items:center;gap:4px;font-size:10px;opacity:.6;\"><div style=\"width:10px;height:10px;border-radius:2px;background:#10b981;\"></div>Won</div>";
+        h+="<div style=\"display:flex;align-items:center;gap:4px;font-size:10px;opacity:.6;\"><div style=\"width:10px;height:10px;border-radius:2px;background:#ef4444;\"></div>Lost</div>";
+        h+="<div style=\"display:flex;align-items:center;gap:4px;font-size:10px;opacity:.6;\"><div style=\"width:10px;height:10px;border-radius:2px;background:#f59e0b;\"></div>No Decision</div>";
+        h+="</div>";
+      } else {
+        h="<div style=\"padding:16px;opacity:.45;text-align:center;font-style:italic;\">No zone data</div>";
+      }
+      el.innerHTML=h;
+    }
+    _renderZoneChart("qlTableZones", zoneMonthData);
+    _renderZoneChart("qlTableZonesTotal", zoneTotalData)
     // Outcome breakdown chart
     var outEl = $("qlChartOutcome");
     if (outEl){
