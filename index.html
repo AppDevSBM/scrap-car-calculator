@@ -3548,11 +3548,11 @@ function bindInputs(){
           var btnNoDecision = document.getElementById('btnQuoteNoDecision');
 
           function logOutcome(outcome){
+            // For regular users, force default KGS before validation
+            if (USER_ROLE === 'user'){ try{ if(!Number(state.vehicle.kgs)||Number(state.vehicle.kgs)<=0) state.vehicle.kgs = 1300; }catch(e){} }
             var kgsN = Number(state.vehicle.kgs);
             if (!Number.isFinite(kgsN) || kgsN <= 0) return;
             if (!state.vehicle.fuelType){ toast('Select fuel type before quoting.', true); return; }
-            
-        if (USER_ROLE === 'user'){ try{ state.vehicle.kgs = 1300; }catch(e){} }
 
             var out = calc();
             var q = computeQuotes(out);
