@@ -1018,7 +1018,7 @@ body{ margin:0; color:var(--text); background: radial-gradient(1100px 700px at 2
       __fbQuotesRef = __fbDb.ref('quoteLog');
       __fbReady = true;
       console.log('[Firebase] Initialised OK');
-      __fbDb.ref('rateOverrides').on('value',function(snap){try{var d=snap.val();if(d&&d.version&&d.data){window.__fbRateCache=d;try{localStorage.setItem('scrapCalcOverrides_v10',JSON.stringify(d));}catch(_){}console.log('[Firebase] Rates synced');}}catch(e){}});
+      __fbDb.ref('rateOverrides').on('value',function(snap){try{var d=snap.val();if(d&&d.version&&d.data){window.__fbRateCache=d;try{localStorage.setItem('scrapCalcOverrides_v10',JSON.stringify(d));}catch(_){}try{if(typeof window.__applyRateOverrides==='function')window.__applyRateOverrides();}catch(_al){}console.log('[Firebase] Rates synced and applied');}}catch(e){}});
 
       // Listen for postcode config changes from Firebase
       __fbDb.ref('postcodeConfig').on('value',function(snap){
@@ -4725,6 +4725,16 @@ function recalc(){
           openAccessGate();
         });
       })();
+
+      // Expose rate re-application for Firebase listener (outside IIFE)
+      window.__applyRateOverrides = function(){
+        try{
+          loadOverridesInto(state);
+          hydrateAll();
+          scheduleRecalc();
+          console.log('[Rates] Applied rate overrides from Firebase');
+        }catch(_e){ console.warn('[Rates] Apply failed',_e); }
+      };
 
       renderInit();
       renderQuoteLog();
