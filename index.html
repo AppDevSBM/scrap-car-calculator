@@ -4785,7 +4785,11 @@ function recalc(){
         </button>
       </div>
 
-      <div class="hubActions">
+      <div class="hubActions" style="display:flex;gap:10px;flex-wrap:wrap;">
+        <button class="hubBtn" id="btnGoFullLog" type="button" onclick="window.__HC_NAV && window.__HC_NAV.toFullLog && window.__HC_NAV.toFullLog()" style="border-color:rgba(255,255,255,.3);background:rgba(255,255,255,.05);flex:1;">
+          <span class="hubBtnTitle" style="color:#e2e8f0;">Full Quote Log</span>
+          <span class="hubBtnSub">View, search and export the complete quote history table.</span>
+        </button>
         <button class="btn" id="btnSuperHubLogout" type="button" style="background:rgba(239,68,68,.15);border-color:rgba(239,68,68,.4);color:#f87171;margin-top:6px;">Logout</button>
       </div>
     </div>
@@ -4967,7 +4971,7 @@ function recalc(){
         </div>
         <div class="card" style="padding:16px;border-top:3px solid rgba(236,72,153,.5);">
           <div style="font-weight:900;font-size:16px;margin-bottom:12px;letter-spacing:.8px;opacity:.85;text-transform:uppercase;color:#ec4899;">QUOTES BY TIME OF DAY</div>
-          <div id="qlChartHourly" style="min-height:130px;"></div>
+          <div id="qlChartHourly" style="min-height:200px;display:flex;align-items:flex-end;"></div>
         </div>
       </div>
 
@@ -4983,6 +4987,22 @@ function recalc(){
         </div>
       </div>
 
+
+    </div>
+  </div>
+</div>
+
+<div id="pageFullLog" style="display:none;">
+  <div style="min-height:100vh;background:var(--bg);overflow:auto;">
+    <div style="display:flex;align-items:center;gap:10px;padding:12px 18px;background:rgba(0,0,0,.25);border-bottom:1px solid rgba(255,255,255,.08);flex-wrap:wrap;position:sticky;top:0;z-index:10;">
+      <button class="btn btnGhost" id="btnFullLogBack" type="button" style="border-color:rgba(245,158,11,.5);color:#fbbf24;" onclick="window.__HC_NAV && window.__HC_NAV.toHub && window.__HC_NAV.toHub()">&#8592; Hub</button>
+      <div style="flex:1;text-align:center;font-weight:900;font-size:18px;letter-spacing:.5px;">FULL QUOTE LOG</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+        <button class="btn" id="btnFullLogRefresh" type="button" style="background:rgba(99,179,237,.18);color:#63b3ed;border-color:rgba(99,179,237,.5);">&#8635; Refresh</button>
+        <button class="btn" id="btnFullLogLogout" type="button" style="background:rgba(239,68,68,.15);border-color:rgba(239,68,68,.4);color:#f87171;">Logout</button>
+      </div>
+    </div>
+    <div style="padding:16px 18px 4px;">
       <div class="card" style="padding:16px;margin-bottom:24px;border-top:3px solid rgba(255,255,255,.15);">
         <div style="display:flex;align-items:center;gap:14px;margin-bottom:10px;flex-wrap:wrap;">
           <div style="font-weight:900;font-size:16px;letter-spacing:.8px;opacity:.85;text-transform:uppercase;flex:1;">FULL QUOTE LOG &mdash; NEWEST FIRST</div>
@@ -5021,6 +5041,7 @@ function recalc(){
     </div>
   </div>
 </div>
+
 
 <script>
 /* Simplified build: Bible/CSV loader logic disabled. Super User UI is unchanged, but CSV-driven dropdowns are not required in this phase. */
@@ -5087,6 +5108,7 @@ function __HC_TOAST__(msg, ok){
     if($("pageVehicleAdmin")) $("pageVehicleAdmin").style.display = "none";
     if($("pagePostcodeAdmin")) $("pagePostcodeAdmin").style.display = "none";
     if($("pageQuoteLog")) $("pageQuoteLog").style.display = "none";
+    if($("pageFullLog")) $("pageFullLog").style.display = "none";
     if($("pageSuperHub")) $("pageSuperHub").style.display = "";
   }
   function showVehicleAdmin(){
@@ -5094,6 +5116,7 @@ function __HC_TOAST__(msg, ok){
     if($("pageSuperHub")) $("pageSuperHub").style.display = "none";
     if($("pagePostcodeAdmin")) $("pagePostcodeAdmin").style.display = "none";
     if($("pageQuoteLog")) $("pageQuoteLog").style.display = "none";
+    if($("pageFullLog")) $("pageFullLog").style.display = "none";
     if($("pageVehicleAdmin")) $("pageVehicleAdmin").style.display = "";
     refreshStatus();
   }
@@ -5102,6 +5125,7 @@ function __HC_TOAST__(msg, ok){
     if($("pageSuperHub")) $("pageSuperHub").style.display = "none";
     if($("pageVehicleAdmin")) $("pageVehicleAdmin").style.display = "none";
     if($("pageQuoteLog")) $("pageQuoteLog").style.display = "none";
+    if($("pageFullLog")) $("pageFullLog").style.display = "none";
     if($("pagePostcodeAdmin")) $("pagePostcodeAdmin").style.display = "";
     try{ if(window.__HC_RENDER_POSTCODE_ADMIN) window.__HC_RENDER_POSTCODE_ADMIN(); }catch(e){}
   }
@@ -5110,6 +5134,7 @@ function __HC_TOAST__(msg, ok){
     if($("pageVehicleAdmin")) $("pageVehicleAdmin").style.display = "none";
     if($("pagePostcodeAdmin")) $("pagePostcodeAdmin").style.display = "none";
     if($("pageQuoteLog")) $("pageQuoteLog").style.display = "none";
+    if($("pageFullLog")) $("pageFullLog").style.display = "none";
     var a = appEl(); if(a) a.style.display = "";
     // ensure super role class already set by existing logic
   }
@@ -5120,6 +5145,7 @@ function __HC_TOAST__(msg, ok){
     if($("pageSuperHub"))      $("pageSuperHub").style.display      = "none";
     if($("pageVehicleAdmin"))  $("pageVehicleAdmin").style.display  = "none";
     if($("pagePostcodeAdmin")) $("pagePostcodeAdmin").style.display = "none";
+    if($("pageFullLog"))       $("pageFullLog").style.display       = "none";
     if($("pageQuoteLog"))      $("pageQuoteLog").style.display      = "";
     if (typeof __wireQLSearch === "function") __wireQLSearch();
     if (typeof __wireQLExport === "function") __wireQLExport();
@@ -5420,15 +5446,15 @@ function __HC_TOAST__(msg, ok){
       var hSvg="",hBarW=100/11;
       for(var hb=0;hb<11;hb++){
         var hHour=hb+7;var hCnt=hourMap[hHour]||0;
-        var hBarH=hMax>0?Math.max(2,Math.round((hCnt/hMax)*85)):0;
+        var hBarH=hMax>0?Math.max(2,Math.round((hCnt/hMax)*170)):0;
         var hx=hb*hBarW+hBarW*0.1,hwI=hBarW*0.8;
         var hLabel=(hHour<10?"0":"")+hHour+":00";
         var hClr=hCnt===hMax&&hCnt>0?"#ec4899":"rgba(236,72,153,.5)";
-        hSvg+="<rect x=\""+hx+"%\" y=\""+(100-hBarH-14)+"\" width=\""+hwI+"%\" height=\""+hBarH+"\" rx=\"3\" fill=\""+hClr+"\"/>";
-        if(hCnt>0)hSvg+="<text x=\""+(hx+hwI/2)+"%\" y=\""+(97-hBarH-14)+"\" text-anchor=\"middle\" font-size=\"9\" font-weight=\"700\" fill=\"rgba(255,255,255,.8)\">"+hCnt+"</text>";
-        hSvg+="<text x=\""+(hx+hwI/2)+"%\" y=\"100\" text-anchor=\"middle\" font-size=\"8\" fill=\"rgba(255,255,255,.45)\">"+hLabel+"</text>";
+        hSvg+="<rect x=\""+hx+"%\" y=\""+(195-hBarH-20)+"\" width=\""+hwI+"%\" height=\""+hBarH+"\" rx=\"3\" fill=\""+hClr+"\"/>";
+        if(hCnt>0)hSvg+="<text x=\""+(hx+hwI/2)+"%\" y=\""+(190-hBarH-20)+"\" text-anchor=\"middle\" font-size=\"11\" font-weight=\"700\" fill=\"rgba(255,255,255,.8)\">"+hCnt+"</text>";
+        hSvg+="<text x=\""+(hx+hwI/2)+"%\" y=\"198\" text-anchor=\"middle\" font-size=\"11\" font-weight=\"700\" fill=\"rgba(255,255,255,.85)\">"+hLabel+"</text>";
       }
-      hourEl.innerHTML="<svg width=\"100%\" height=\"110\" style=\"display:block;overflow:visible;\">"+hSvg+"</svg>";
+      hourEl.innerHTML="<svg width=\"100%\" height=\"200\" style=\"display:block;overflow:visible;\">"+hSvg+"</svg>";
     }
     }catch(_chartErr){console.warn('[QuoteLog] Chart rendering error:',_chartErr);}
   }
@@ -5437,7 +5463,62 @@ function __HC_TOAST__(msg, ok){
   window.__HC_NAV.toCalc = function(){ try{ showCalculator(); }catch(e){ console.error(e); } };
   window.__HC_NAV.toVehicle = function(){ try{ showVehicleAdmin(); }catch(e){ console.error(e); } };
   window.__HC_NAV.toPostcode  = function(){ try{ showPostcodeAdmin(); }catch(e){ console.error(e); } };
+  function showFullLog(){
+    var a = appEl(); if(a) a.style.display = "none";
+    if($("pageSuperHub"))      $("pageSuperHub").style.display      = "none";
+    if($("pageVehicleAdmin"))  $("pageVehicleAdmin").style.display  = "none";
+    if($("pagePostcodeAdmin")) $("pagePostcodeAdmin").style.display = "none";
+    if($("pageQuoteLog"))      $("pageQuoteLog").style.display      = "none";
+    if($("pageFullLog"))       $("pageFullLog").style.display       = "";
+    if (typeof __wireQLSearch === "function") __wireQLSearch();
+    if (typeof __wireQLExport === "function") __wireQLExport();
+    // Wire refresh + logout
+    var _flRef=$("btnFullLogRefresh");if(_flRef)_flRef.onclick=function(){
+      if(window.__fbReady && window.__fbQuotesRef){
+        window.__fbQuotesRef.once('value').then(function(s){
+          try{
+            var d=s.val();
+            if(d&&d.version===1&&Array.isArray(d.items)){
+              var _lsR=localStorage.getItem('scrapCalcQuoteLog_v10');var _lsI=[];
+              try{var _lp=JSON.parse(_lsR);if(_lp&&_lp.version===1&&Array.isArray(_lp.items))_lsI=_lp.items;}catch(_){}
+              var merged=d.items.slice();
+              for(var i=0;i<_lsI.length;i++){var dup=false;for(var j=0;j<merged.length;j++){if(merged[j].atIso===_lsI[i].atIso&&merged[j].vrm===_lsI[i].vrm){dup=true;break;}}if(!dup)merged.push(_lsI[i]);}
+              merged.sort(function(a,b){return(b.atIso||'').localeCompare(a.atIso||'');});
+              window.__fbCache=merged;
+              try{localStorage.setItem('scrapCalcQuoteLog_v10',JSON.stringify({version:1,savedAt:new Date().toISOString(),items:merged}));}catch(_){}
+              if(typeof window.renderQuoteLog==="function") try{ window.renderQuoteLog(); }catch(_){}
+            }
+          }catch(_){}
+        }).catch(function(){});
+      }
+    };
+    var _flLo=$("btnFullLogLogout");if(_flLo)_flLo.onclick=function(){ try{ logoutToGate(); }catch(e){ try{ location.reload(); }catch(_){} } };
+    var _flBk=$("btnFullLogBack");if(_flBk)_flBk.onclick=function(){ try{ showPageSuperHub(); }catch(e){} };
+    // Render table
+    if(typeof window.renderQuoteLog==="function") try{ window.renderQuoteLog(); }catch(_r){}
+    // Background fetch
+    if(window.__fbReady && window.__fbQuotesRef){
+      window.__fbQuotesRef.once('value').then(function(s){
+        try{
+          var d=s.val();
+          if(d&&d.version===1&&Array.isArray(d.items)){
+            var _lsR2=localStorage.getItem('scrapCalcQuoteLog_v10');var _lsI2=[];
+            try{var _lp2=JSON.parse(_lsR2);if(_lp2&&_lp2.version===1&&Array.isArray(_lp2.items))_lsI2=_lp2.items;}catch(_){}
+            var merged2=d.items.slice();
+            for(var i2=0;i2<_lsI2.length;i2++){var dup2=false;for(var j2=0;j2<merged2.length;j2++){if(merged2[j2].atIso===_lsI2[i2].atIso&&merged2[j2].vrm===_lsI2[i2].vrm){dup2=true;break;}}if(!dup2)merged2.push(_lsI2[i2]);}
+            merged2.sort(function(a,b){return(b.atIso||'').localeCompare(a.atIso||'');});
+            window.__fbCache=merged2;
+            try{localStorage.setItem('scrapCalcQuoteLog_v10',JSON.stringify({version:1,savedAt:new Date().toISOString(),items:merged2}));}catch(_){}
+            if(typeof window.renderQuoteLog==="function") try{ window.renderQuoteLog(); }catch(_){}
+          }
+        }catch(_){}
+      }).catch(function(){});
+    }
+  }
+
   window.__HC_NAV.toQuoteLog = function(){ try{ showQuoteLog(); }catch(e){ console.error(e); } };
+  window.__HC_NAV.toFullLog = function(){ try{ showFullLog(); }catch(e){ console.error(e); } };
+  window.__HC_NAV.toHub = function(){ try{ showPageSuperHub(); }catch(e){ console.error(e); } };
   window.__HC_NAV.logout = function(){ try{ logoutToGate(); }catch(e){ try{ location.reload(); }catch(_){} } };
 function logoutToGate(){
     try{ location.reload(); }catch(e){}
