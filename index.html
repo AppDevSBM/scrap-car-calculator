@@ -1034,19 +1034,38 @@ body{ margin:0; color:var(--text); background: radial-gradient(1100px 700px at 2
         }catch(e){}
       });
 
+      // One-time cleanup: remove test data before 12/03/2026 from Firebase
+      var __fbCleanupDone = false;
+      function __fbCleanupOldData(items){
+        if (__fbCleanupDone) return items;
+        __fbCleanupDone = true;
+        var cut = '2026-03-12T00:00:00';
+        var clean = [];
+        for (var ci=0;ci<items.length;ci++){
+          if (items[ci].atIso && items[ci].atIso < cut) continue;
+          clean.push(items[ci]);
+        }
+        if (clean.length < items.length){
+          console.log('[Firebase] Cleaned ' + (items.length - clean.length) + ' old test entries');
+          try{ __fbQuotesRef.set({version:1, savedAt:new Date().toISOString(), items:clean}); }catch(_){}
+        }
+        return clean;
+      }
+
       // Real-time listener — updates local cache whenever any user writes
       __fbQuotesRef.on('value', function(snapshot) {
         try {
           var data = snapshot.val();
           if (data && data.version === 1 && Array.isArray(data.items)) {
-            __fbCache = data.items;
+            var _cleanItems = __fbCleanupOldData(data.items);
+            __fbCache = _cleanItems;
             // Merge Firebase data with localStorage (preserve local-only entries)
             try {
               var _lsRaw = localStorage.getItem('scrapCalcQuoteLog_v10');
               var _lsItems = [];
               try { var _lp = JSON.parse(_lsRaw); if(_lp&&_lp.version===1&&Array.isArray(_lp.items)) _lsItems=_lp.items; } catch(_){}
               // Start with Firebase items, add any local-only entries
-              var merged = data.items.slice();
+              var merged = _cleanItems.slice();
               for (var _mi=0;_mi<_lsItems.length;_mi++){
                 var _dup=false;
                 for (var _fi=0;_fi<merged.length;_fi++){
@@ -2078,14 +2097,7 @@ function pruneQuoteLogItems(items){
           }
         }catch(e){}
 
-        // Prune test data before 12/03/2026
-        var _cutoff = '2026-03-12T00:00:00';
-        var _pruned = [];
-        for (var _pi=0;_pi<lsItems.length;_pi++){
-          if (lsItems[_pi].atIso && lsItems[_pi].atIso < _cutoff) continue;
-          _pruned.push(lsItems[_pi]);
-        }
-        return _pruned;
+        return lsItems;
       }
 
       function saveQuoteLog(items){
@@ -5058,9 +5070,13 @@ function __HC_TOAST__(msg, ok){
         try{
           var d=s.val();
           if(d&&d.version===1&&Array.isArray(d.items)){
+            // Filter old test data
+            var _fbI2=[];var _cut2='2026-03-12T00:00:00';for(var c2=0;c2<d.items.length;c2++){if(d.items[c2].atIso&&d.items[c2].atIso<_cut2)continue;_fbI2.push(d.items[c2]);}
             var _lsR2=localStorage.getItem('scrapCalcQuoteLog_v10');var _lsI2=[];
             try{var _lp2=JSON.parse(_lsR2);if(_lp2&&_lp2.version===1&&Array.isArray(_lp2.items))_lsI2=_lp2.items;}catch(_){}
-            var merged2=d.items.slice();
+            // Also filter local old data
+            var _lsI2f=[];for(var l2=0;l2<_lsI2.length;l2++){if(_lsI2[l2].atIso&&_lsI2[l2].atIso<_cut2)continue;_lsI2f.push(_lsI2[l2]);}_lsI2=_lsI2f;
+            var merged2=_fbI2.slice();
             for(var i2=0;i2<_lsI2.length;i2++){var dup2=false;for(var j2=0;j2<merged2.length;j2++){if(merged2[j2].atIso===_lsI2[i2].atIso&&merged2[j2].vrm===_lsI2[i2].vrm){dup2=true;break;}}if(!dup2)merged2.push(_lsI2[i2]);}
             merged2.sort(function(a,b){return(b.atIso||'').localeCompare(a.atIso||'');});
             window.__fbCache=merged2;
