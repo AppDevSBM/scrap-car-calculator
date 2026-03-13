@@ -4965,9 +4965,9 @@ function recalc(){
           <div style="font-weight:900;font-size:16px;margin-bottom:12px;letter-spacing:.8px;opacity:.85;text-transform:uppercase;color:#63b3ed;">QUOTES BY USER</div>
           <div id="qlTableUsers"></div>
         </div>
-        <div class="card" style="padding:16px;border-top:3px solid rgba(236,72,153,.5);display:flex;flex-direction:column;">
+        <div class="card" style="padding:16px;border-top:3px solid rgba(236,72,153,.5);display:flex;flex-direction:column;height:100%;box-sizing:border-box;">
           <div style="font-weight:900;font-size:16px;margin-bottom:12px;letter-spacing:.8px;opacity:.85;text-transform:uppercase;color:#ec4899;">QUOTES BY TIME OF DAY</div>
-          <div id="qlChartHourly"></div>
+          <div id="qlChartHourly" style="flex:1;display:flex;flex-direction:column;"></div>
         </div>
       </div>
 
@@ -5440,8 +5440,9 @@ function __HC_TOAST__(msg, ok){
       }
       var gMax=1;for(var _gi=0;_gi<_dKeys.length;_gi++){for(var _gh=7;_gh<=17;_gh++){var _gv=_dData[_dKeys[_gi]][_gh]||0;if(_gv>gMax)gMax=_gv;}}
       var _rows=[{k:"-1",l:"Total",c:"#ec4899"},{k:"1",l:"Mon",c:"#3b82f6"},{k:"2",l:"Tue",c:"#8b5cf6"},{k:"3",l:"Wed",c:"#10b981"},{k:"4",l:"Thu",c:"#f59e0b"},{k:"5",l:"Fri",c:"#ef4444"},{k:"6",l:"Sat",c:"#ec4899"}];
-      // Time header
-      var hH="<div style=\"display:flex;align-items:flex-end;margin-bottom:6px;\">";
+      // Time header — wrap in flex column to fill card
+      var hH="<div style=\"display:flex;flex-direction:column;height:100%;\">";
+      hH+="<div style=\"display:flex;align-items:flex-end;padding-bottom:6px;\">";
       hH+="<div style=\"width:42px;flex-shrink:0;\"></div>";
       for(var _th=7;_th<=17;_th++){hH+="<div style=\"flex:1;text-align:center;font-size:9px;font-weight:700;color:rgba(255,255,255,.45);\">"+((_th<10?"0":"")+_th)+"</div>";}
       hH+="<div style=\"width:32px;flex-shrink:0;\"></div></div>";
@@ -5449,12 +5450,12 @@ function __HC_TOAST__(msg, ok){
       for(var _ri=0;_ri<_rows.length;_ri++){
         var _r=_rows[_ri];var hMap=_dData[_r.k];var rowT=0;for(var _rt=7;_rt<=17;_rt++)rowT+=(hMap[_rt]||0);
         var isT=_r.k==="-1";
-        hH+="<div style=\"display:flex;align-items:center;padding:4px 0;"+(isT?"border-bottom:1px solid rgba(255,255,255,.08);margin-bottom:4px;padding-bottom:6px;":"")+"\">";
+        hH+="<div style=\"display:flex;align-items:center;flex:1;"+(isT?"border-bottom:1px solid rgba(255,255,255,.08);":"")+"\">";
         hH+="<div style=\"width:42px;flex-shrink:0;font-size:11px;font-weight:"+(isT?"950":"700")+";color:"+_r.c+";\">"+_r.l+"</div>";
         for(var _rh=7;_rh<=17;_rh++){
           var _rc=hMap[_rh]||0;
           var barH=gMax>0?Math.max(0,Math.round((_rc/gMax)*24)):0;
-          hH+="<div style=\"flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:28px;\">";
+          hH+="<div style=\"flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;\">";
           if(_rc>0){
             hH+="<div style=\"font-size:8px;font-weight:800;color:rgba(255,255,255,.7);margin-bottom:1px;\">"+_rc+"</div>";
             hH+="<div style=\"width:80%;height:"+Math.max(3,barH)+"px;background:"+_r.c+";border-radius:2px;opacity:"+(_rc===gMax&&_rc>0?"1":".55")+";\"></div>";
@@ -5466,6 +5467,7 @@ function __HC_TOAST__(msg, ok){
         hH+="<div style=\"width:32px;flex-shrink:0;text-align:right;font-size:11px;font-weight:950;color:"+_r.c+";\">"+(rowT>0?rowT:"")+"</div>";
         hH+="</div>";
       }
+      hH+="</div>"; // close flex column wrapper
       hourEl.innerHTML=hH;
     }
     }catch(_chartErr){console.warn('[QuoteLog] Chart rendering error:',_chartErr);}
