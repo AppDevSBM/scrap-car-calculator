@@ -4959,18 +4959,15 @@ function recalc(){
         </div>
       </div>
 
-      <!-- ROW 5: Quotes by User (full width) -->
-      <div style="margin-bottom:14px;">
+      <!-- ROW 5: Quotes by User | Quotes by Time of Day -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">
         <div class="card" style="padding:16px;border-top:3px solid rgba(99,179,237,.5);">
           <div style="font-weight:900;font-size:16px;margin-bottom:12px;letter-spacing:.8px;opacity:.85;text-transform:uppercase;color:#63b3ed;">QUOTES BY USER</div>
           <div id="qlTableUsers"></div>
         </div>
-      </div>
-      <!-- ROW 5b: Quotes by Time of Day (full width) -->
-      <div style="margin-bottom:14px;">
-        <div class="card" style="padding:16px;border-top:3px solid rgba(236,72,153,.5);">
+        <div class="card" style="padding:16px;border-top:3px solid rgba(236,72,153,.5);display:flex;flex-direction:column;">
           <div style="font-weight:900;font-size:16px;margin-bottom:12px;letter-spacing:.8px;opacity:.85;text-transform:uppercase;color:#ec4899;">QUOTES BY TIME OF DAY</div>
-          <div id="qlChartHourly" style="overflow:hidden;"></div>
+          <div id="qlChartHourly" style="flex:1;display:flex;align-items:flex-end;"></div>
         </div>
       </div>
 
@@ -5431,44 +5428,28 @@ function __HC_TOAST__(msg, ok){
       pcH += "</tbody></table>";
       pcEl.innerHTML = pcH;
     }
-    // Quotes by Time of Day — stacked rows (Total + Mon-Sat)
+    // Quotes by Time of Day — vertical bar chart filling card height
     var hourEl=$("qlChartHourly");
     if(hourEl){
-      var dayHourData={};var _dayKeys=["-1","1","2","3","4","5","6"];
-      var _dayLabels={"−1":"Total","1":"Mon","2":"Tue","3":"Wed","4":"Thu","5":"Fri","6":"Sat"};
-      for(var _dk=0;_dk<_dayKeys.length;_dk++){dayHourData[_dayKeys[_dk]]={};for(var _dh=7;_dh<=17;_dh++)dayHourData[_dayKeys[_dk]][_dh]=0;}
+      var hourMap={};for(var hi=7;hi<=17;hi++)hourMap[hi]=0;
       for(var hqi=0;hqi<_items.length;hqi++){
         var hIt=_items[hqi]||{};var hIso=hIt.atIso||"";if(!hIso)continue;
-        try{var hD=new Date(hIso);if(!isNaN(hD.getTime())){var hh=hD.getHours();var hDay=hD.getDay();if(hh>=7&&hh<=17){dayHourData["-1"][hh]++;if(hDay>=1&&hDay<=6)dayHourData[String(hDay)][hh]++;}}}catch(_){}
+        try{var hD=new Date(hIso);if(!isNaN(hD.getTime())){var hh=hD.getHours();if(hh>=7&&hh<=17)hourMap[hh]++;}}catch(_){}
       }
-      // Find global max across all rows for consistent scaling
-      var gMax=1;for(var _gk=0;_gk<_dayKeys.length;_gk++){for(var _gh=7;_gh<=17;_gh++){var _gv=dayHourData[_dayKeys[_gk]][_gh]||0;if(_gv>gMax)gMax=_gv;}}
-      // Time header row
-      var hH="<div style=\"display:flex;align-items:center;padding:0 0 4px;border-bottom:1px solid rgba(255,255,255,.06);margin-bottom:2px;\">";
-      hH+="<div style=\"width:48px;flex-shrink:0;\"></div><div style=\"flex:1;display:flex;\">";
-      for(var _th=7;_th<=17;_th++){hH+="<div style=\"flex:1;text-align:center;font-size:9px;font-weight:700;color:rgba(255,255,255,.5);\">"+((_th<10?"0":"")+_th)+":00</div>";}
-      hH+="</div><div style=\"width:36px;flex-shrink:0;\"></div></div>";
-      // Day rows
-      var _rowClrs={"−1":"#ec4899","1":"#3b82f6","2":"#8b5cf6","3":"#10b981","4":"#f59e0b","5":"#ef4444","6":"#ec4899"};
-      var _rowOrder=[{k:"-1",l:"Total",c:"#ec4899"},{k:"1",l:"Mon",c:"#3b82f6"},{k:"2",l:"Tue",c:"#8b5cf6"},{k:"3",l:"Wed",c:"#10b981"},{k:"4",l:"Thu",c:"#f59e0b"},{k:"5",l:"Fri",c:"#ef4444"},{k:"6",l:"Sat",c:"#ec4899"}];
-      for(var _ri=0;_ri<_rowOrder.length;_ri++){
-        var _r=_rowOrder[_ri];var hMap=dayHourData[_r.k];
-        var rowTotal=0;for(var _rt=7;_rt<=17;_rt++)rowTotal+=(hMap[_rt]||0);
-        var isTotal=_r.k==="-1";
-        hH+="<div style=\"display:flex;align-items:center;padding:3px 0;"+(isTotal?"border-bottom:1px solid rgba(255,255,255,.08);margin-bottom:2px;padding-bottom:5px;":"")+"\">";
-        hH+="<div style=\"width:48px;flex-shrink:0;font-size:11px;font-weight:"+(isTotal?"950":"700")+";color:"+_r.c+";letter-spacing:.3px;\">"+_r.l+"</div>";
-        hH+="<div style=\"flex:1;display:flex;gap:2px;align-items:center;\">";
-        for(var _rh=7;_rh<=17;_rh++){
-          var _rc=hMap[_rh]||0;
-          var _bh=gMax>0?Math.max(0,Math.round((_rc/gMax)*100)):0;
-          if(_rc===0){hH+="<div style=\"flex:1;height:18px;display:flex;align-items:center;justify-content:center;\"><div style=\"width:100%;height:3px;background:rgba(255,255,255,.04);border-radius:2px;\"></div></div>";}
-          else{hH+="<div style=\"flex:1;height:18px;display:flex;align-items:center;justify-content:center;\"><div style=\"width:100%;height:"+Math.max(4,Math.round(_bh*0.18))+"px;background:"+_r.c+";border-radius:2px;opacity:"+(_rc===gMax?"1":".55")+";position:relative;\"><span style=\"position:absolute;width:100%;text-align:center;font-size:8px;font-weight:800;color:#fff;top:-10px;\">"+_rc+"</span></div></div>";}
-        }
-        hH+="</div>";
-        hH+="<div style=\"width:36px;flex-shrink:0;text-align:right;font-size:12px;font-weight:950;color:"+_r.c+";\">"+(rowTotal>0?rowTotal:"")+"</div>";
-        hH+="</div>";
+      var hMax=1;for(var hk=7;hk<=17;hk++)if(hourMap[hk]>hMax)hMax=hourMap[hk];
+      // Use 100% width SVG that fills the container
+      var hSvg="",hBarW=100/11;
+      for(var hb=0;hb<11;hb++){
+        var hHour=hb+7;var hCnt=hourMap[hHour]||0;
+        var hBarPct=hMax>0?Math.max(1,Math.round((hCnt/hMax)*78)):0;
+        var hx=hb*hBarW+hBarW*0.1,hwI=hBarW*0.8;
+        var hLabel=(hHour<10?"0":"")+hHour+":00";
+        var hClr=hCnt===hMax&&hCnt>0?"#ec4899":"rgba(236,72,153,.5)";
+        hSvg+="<rect x=\""+hx+"%\" y=\""+(88-hBarPct)+"%\" width=\""+hwI+"%\" height=\""+hBarPct+"%\" rx=\"3\" fill=\""+hClr+"\"/>";
+        if(hCnt>0)hSvg+="<text x=\""+(hx+hwI/2)+"%\" y=\""+(85-hBarPct)+"%\" text-anchor=\"middle\" font-size=\"11\" font-weight=\"700\" fill=\"rgba(255,255,255,.8)\">"+hCnt+"</text>";
+        hSvg+="<text x=\""+(hx+hwI/2)+"%\" y=\"98%\" text-anchor=\"middle\" font-size=\"10\" font-weight=\"700\" fill=\"rgba(255,255,255,.8)\">"+hLabel+"</text>";
       }
-      hourEl.innerHTML=hH;
+      hourEl.innerHTML="<svg width=\"100%\" height=\"100%\" viewBox=\"0 0 100 100\" preserveAspectRatio=\"none\" style=\"display:block;min-height:200px;\">"+hSvg+"</svg>";
     }
     }catch(_chartErr){console.warn('[QuoteLog] Chart rendering error:',_chartErr);}
   }
